@@ -79,13 +79,22 @@ export function useChat(callbacks: {
           return;
         }
 
-        const result = executeAction(action, {
-          addTodo: callbacks.addTodo,
-          updateTodo: callbacks.updateTodo,
-          deleteTodo: callbacks.deleteTodo,
-          setFilters: callbacks.setFilters,
-          todos: callbacks.todos,
-        });
+        let result;
+        try {
+          result = executeAction(action, {
+            addTodo: callbacks.addTodo,
+            updateTodo: callbacks.updateTodo,
+            deleteTodo: callbacks.deleteTodo,
+            setFilters: callbacks.setFilters,
+            todos: callbacks.todos,
+          });
+        } catch {
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: "I couldn't complete that action. Please try again." },
+          ]);
+          return;
+        }
 
         setMessages((prev) => [
           ...prev,

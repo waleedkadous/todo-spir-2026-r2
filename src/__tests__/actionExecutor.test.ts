@@ -394,11 +394,11 @@ describe("executeAction", () => {
       });
     });
 
-    it("reports count without filter", () => {
+    it("resets filters and reports count without filter", () => {
       const cb = makeCallbacks();
       const action: NLAction = { type: "LIST_TODOS" };
       const result = executeAction(action, cb);
-      expect(cb.setFilters).not.toHaveBeenCalled();
+      expect(cb.setFilters).toHaveBeenCalledWith({ status: "all", priority: "all" });
       expect(result.message).toContain("1 todo");
     });
   });

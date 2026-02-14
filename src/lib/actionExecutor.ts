@@ -254,6 +254,7 @@ export function executeAction(
           message: `Found ${matchCount} matching todo${matchCount !== 1 ? "s" : ""}.`,
         };
       }
+      callbacks.setFilters({ status: "all", priority: "all" });
       const count = callbacks.todos.length;
       return {
         message: `Showing all ${count} todo${count !== 1 ? "s" : ""}.`,
