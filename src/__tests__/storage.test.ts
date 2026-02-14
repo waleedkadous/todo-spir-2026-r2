@@ -96,6 +96,33 @@ describe("saveTodos", () => {
   });
 });
 
+describe("localStorage unavailable", () => {
+  it("throws when localStorage.setItem fails on save", () => {
+    localStorageMock.setItem.mockImplementationOnce(() => {
+      throw new Error("QuotaExceededError");
+    });
+    expect(() => saveTodos([])).toThrow("Failed to save todos");
+  });
+
+  it("throws when addTodo cannot persist", () => {
+    // First setItem call succeeds (for the initial read), but we need
+    // to make the save fail
+    const originalSetItem = localStorageMock.setItem;
+    localStorageMock.setItem = vi.fn(() => {
+      throw new Error("QuotaExceededError");
+    });
+    expect(() => addTodo({ title: "Test" })).toThrow("Failed to save todos");
+    localStorageMock.setItem = originalSetItem;
+  });
+
+  it("returns empty array when localStorage.getItem throws", () => {
+    localStorageMock.getItem.mockImplementationOnce(() => {
+      throw new Error("SecurityError");
+    });
+    expect(getTodos()).toEqual([]);
+  });
+});
+
 describe("addTodo", () => {
   it("creates a todo with all fields", () => {
     const todo = addTodo({

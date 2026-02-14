@@ -17,7 +17,13 @@ export function getTodos(): Todo[] {
 
 export function saveTodos(todos: Todo[]): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+  } catch (e) {
+    throw new Error(
+      `Failed to save todos: ${e instanceof Error ? e.message : "localStorage unavailable"}`
+    );
+  }
 }
 
 function validateTitle(title: string): string {
