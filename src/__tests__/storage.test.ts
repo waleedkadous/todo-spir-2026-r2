@@ -72,6 +72,16 @@ describe("getTodos", () => {
     localStorageMock.setItem("todo-manager-todos", "not json");
     expect(getTodos()).toEqual([]);
   });
+
+  it("returns empty array when localStorage contains valid JSON but not an array", () => {
+    localStorageMock.setItem("todo-manager-todos", '{"key": "value"}');
+    expect(getTodos()).toEqual([]);
+  });
+
+  it("returns empty array when localStorage contains a JSON string", () => {
+    localStorageMock.setItem("todo-manager-todos", '"just a string"');
+    expect(getTodos()).toEqual([]);
+  });
 });
 
 describe("saveTodos", () => {

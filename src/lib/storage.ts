@@ -9,7 +9,9 @@ export function getTodos(): Todo[] {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) return [];
-    return JSON.parse(data) as Todo[];
+    const parsed = JSON.parse(data);
+    if (!Array.isArray(parsed)) return [];
+    return parsed as Todo[];
   } catch {
     return [];
   }
