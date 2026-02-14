@@ -1,4 +1,4 @@
-import { Todo, Priority, Status, TodoFilters } from "@/types/todo";
+import { Todo, Priority, TodoFilters } from "@/types/todo";
 
 const STORAGE_KEY = "todo-manager-todos";
 const TITLE_MAX_LENGTH = 200;
@@ -21,7 +21,8 @@ export function saveTodos(todos: Todo[]): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
   } catch (e) {
     throw new Error(
-      `Failed to save todos: ${e instanceof Error ? e.message : "localStorage unavailable"}`
+      `Failed to save todos: ${e instanceof Error ? e.message : "localStorage unavailable"}`,
+      { cause: e }
     );
   }
 }
@@ -120,6 +121,15 @@ export function filterTodos(
       return false;
     }
     if (filters.priority !== "all" && todo.priority !== filters.priority) {
+      return false;
+    }
+    if (filters.dueBefore && todo.dueDate) {
+      if (todo.dueDate > filters.dueBefore) return false;
+    }
+    if (filters.dueAfter && todo.dueDate) {
+      if (todo.dueDate < filters.dueAfter) return false;
+    }
+    if ((filters.dueBefore || filters.dueAfter) && !todo.dueDate) {
       return false;
     }
     return true;

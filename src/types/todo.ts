@@ -15,4 +15,6 @@ export interface Todo {
 export interface TodoFilters {
   status: Status | "all";
   priority: Priority | "all";
+  dueBefore?: string;
+  dueAfter?: string;
 }

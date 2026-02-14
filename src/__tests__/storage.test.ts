@@ -369,6 +369,93 @@ describe("filterTodos", () => {
     const result = filterTodos(todos, filters);
     expect(result).toHaveLength(0);
   });
+
+  const todosWithDates: Todo[] = [
+    {
+      id: "d1",
+      title: "Due Feb 10",
+      description: "",
+      priority: "medium",
+      dueDate: "2026-02-10",
+      status: "pending",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    },
+    {
+      id: "d2",
+      title: "Due Feb 15",
+      description: "",
+      priority: "high",
+      dueDate: "2026-02-15",
+      status: "pending",
+      createdAt: "2026-01-02T00:00:00.000Z",
+      updatedAt: "2026-01-02T00:00:00.000Z",
+    },
+    {
+      id: "d3",
+      title: "Due Feb 20",
+      description: "",
+      priority: "low",
+      dueDate: "2026-02-20",
+      status: "completed",
+      createdAt: "2026-01-03T00:00:00.000Z",
+      updatedAt: "2026-01-03T00:00:00.000Z",
+    },
+    {
+      id: "d4",
+      title: "No due date",
+      description: "",
+      priority: "medium",
+      dueDate: null,
+      status: "pending",
+      createdAt: "2026-01-04T00:00:00.000Z",
+      updatedAt: "2026-01-04T00:00:00.000Z",
+    },
+  ];
+
+  it("filters by dueBefore", () => {
+    const filters: TodoFilters = { status: "all", priority: "all", dueBefore: "2026-02-16" };
+    const result = filterTodos(todosWithDates, filters);
+    expect(result).toHaveLength(2);
+    expect(result.map((t) => t.id)).toEqual(["d1", "d2"]);
+  });
+
+  it("filters by dueAfter", () => {
+    const filters: TodoFilters = { status: "all", priority: "all", dueAfter: "2026-02-14" };
+    const result = filterTodos(todosWithDates, filters);
+    expect(result).toHaveLength(2);
+    expect(result.map((t) => t.id)).toEqual(["d2", "d3"]);
+  });
+
+  it("filters by dueBefore and dueAfter (date range)", () => {
+    const filters: TodoFilters = {
+      status: "all",
+      priority: "all",
+      dueAfter: "2026-02-11",
+      dueBefore: "2026-02-19",
+    };
+    const result = filterTodos(todosWithDates, filters);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe("d2");
+  });
+
+  it("excludes todos without due date when date filter is active", () => {
+    const filters: TodoFilters = { status: "all", priority: "all", dueBefore: "2026-12-31" };
+    const result = filterTodos(todosWithDates, filters);
+    expect(result.every((t) => t.dueDate !== null)).toBe(true);
+    expect(result).toHaveLength(3);
+  });
+
+  it("combines date filter with status and priority filters", () => {
+    const filters: TodoFilters = {
+      status: "pending",
+      priority: "all",
+      dueBefore: "2026-02-16",
+    };
+    const result = filterTodos(todosWithDates, filters);
+    expect(result).toHaveLength(2);
+    expect(result.map((t) => t.id)).toEqual(["d1", "d2"]);
+  });
 });
 
 describe("sortTodosByCreatedAt", () => {
