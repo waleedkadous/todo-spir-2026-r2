@@ -1,0 +1,89 @@
+
+
+I'll start by reading the spec and plan files, then explore the implementation.Good, I now have a clear picture of Phase 2's scope. Let me explore the implementation files.
+
+Now let me read all the Phase 2 implementation files in detail.Now let me verify the tests actually pass:All 39 tests pass. Now let me complete my review with a thorough analysis.
+
+---
+
+## Phase 2 Review: Todo Data Layer & Types
+
+### 1. Spec Adherence ✅
+
+**Todo type** (`src/types/todo.ts`): All fields match the spec — `id`, `title`, `description`, `priority`, `dueDate`, `status`, `createdAt`, `updatedAt`. Priority is `"low" | "medium" | "high"`, Status is `"pending" | "completed"`, and `dueDate` is correctly `string | null`. The `TodoFilters` interface supports the spec's filtering requirements.
+
+**NL action types** (`src/types/actions.ts`): All six action types from the spec are defined — `ADD_TODO`, `UPDATE_TODO`, `DELETE_TODO`, `LIST_TODOS`, `CLARIFY`, `RESPONSE`. The discriminated union `NLAction` is well-typed and matches the action schema contract in the spec exactly. The `ListTodosAction` correctly includes optional `dueBefore`/`dueAfter` date filters.
+
+**CRUD operations**: Create, read, update, delete all work correctly against localStorage.
+
+**Defaults**: `priority: "medium"`, `status: "pending"` are applied as specified.
+
+**Field validation**: Title max 200 chars, description max 2000 chars — enforced on both create and update paths.
+
+**Sort order**: `createdAt` descending (newest first), matching spec.
+
+**ID generation**: Uses `crypto.randomUUID()` as specified.
+
+### 2. Code Quality ✅
+
+The code is clean, well-structured, and idiomatic TypeScript.
+
+- **storage.ts**: Good separation of concerns — validation is factored into `validateTitle`/`validateDescription` helper functions. The `typeof window === "undefined"` guard is a solid pattern for SSR safety in Next.js.
+- **useTodos.ts**: The hook is cleanly designed with `useCallback` for stable function references. The `"use client"` directive is appropriate since it uses `useState`/`useEffect`.
+- **Type safety**: Strong typing throughout. `Partial<Pick<Todo, ...>>` for the update signature is precise and prevents accidental mutation of system fields (`id`, `createdAt`).
+- The `filteredTodos` computed value in the hook correctly chains filtering then sorting, which is the right order.
+
+### 3. Test Coverage ✅
+
+**39 tests pass**, covering:
+- `getTodos`: Empty state, valid data, corrupt JSON
+- `saveTodos`: Normal write, localStorage failure (throws)
+- `addTodo`: All fields, defaults, whitespace trimming, empty/whitespace-only title, boundary lengths (200/2000), persistence, appending
+- `updateTodo`: Priority, status, title changes; validation on update; updatedAt timestamp changes; non-existent ID; persistence
+- `deleteTodo`: Removal, non-existent ID, selective deletion
+- `filterTodos`: All combinations (status, priority, combined, no matches, all pass-through)
+- `sortTodosByCreatedAt`: Descending order, immutability, empty array
+- **localStorage unavailable**: `setItem` failure on `saveTodos`, `setItem` failure on `addTodo`, `getItem` throws
+
+This is comprehensive test coverage. The previous iteration's concern from Codex about localStorage write-path failure handling has been addressed — there are explicit tests for `saveTodos` throwing on `setItem` failure and for `addTodo` propagating that failure.
+
+### 4. Error Handling ✅
+
+- **Read path**: `getTodos` gracefully returns `[]` on corrupt JSON or `getItem` exceptions — silent degradation, which is correct for reads.
+- **Write path**: `saveTodos` wraps `setItem` failures in a descriptive `Error` and re-throws. This propagates to `addTodo`, `updateTodo`, and `deleteTodo`, which all call `saveTodos` internally. The calling code (hook/UI) can catch and display these errors.
+- **Not-found errors**: Both `updateTodo` and `deleteTodo` throw descriptive errors for missing IDs.
+- **SSR guard**: `typeof window === "undefined"` checks prevent localStorage access during server-side rendering.
+
+### 5. Plan Alignment ✅
+
+All Phase 2 deliverables are present:
+- [x] `src/types/todo.ts` — Todo types with field constraints
+- [x] `src/types/actions.ts` — NL action type definitions
+- [x] `src/lib/storage.ts` — localStorage CRUD with validation
+- [x] `src/hooks/useTodos.ts` — React hook wrapping storage with state and filtering
+- [x] `src/__tests__/storage.test.ts` — Comprehensive unit tests
+
+All Phase 2 acceptance criteria are met:
+- [x] Todo type matches spec fields
+- [x] CRUD operations work against localStorage
+- [x] Field validation enforced (title max 200, description max 2000)
+- [x] Default values applied (priority: medium, status: pending)
+- [x] Filtering by status and priority works
+- [x] Default sort order is createdAt descending
+- [x] Unit tests pass
+
+### Minor Observations (non-blocking)
+
+1. **`useTodos` hook not unit-tested**: The hook itself doesn't have a dedicated test file (e.g., `useTodos.test.ts`). This is acceptable for Phase 2 since the plan specifies unit tests for "CRUD operations, filtering, sorting" — all of which are in `storage.test.ts`. Hook testing will likely come naturally via component tests in Phase 3. Not a blocker.
+
+2. **`filteredTodos` recomputed on every render**: In `useTodos.ts` line 48, `filteredTodos` is computed directly in the render path rather than memoized with `useMemo`. For small todo lists (spec mentions practical limit ~1000), this is negligible. Could be `useMemo`'d for optimization later if needed.
+
+---
+
+---
+VERDICT: APPROVE
+SUMMARY: Phase 2 delivers all planned files with correct types, validated CRUD, localStorage error handling, React hook, and 39 passing tests — fully aligned with spec and plan.
+CONFIDENCE: HIGH
+---
+
+KEY_ISSUES: None

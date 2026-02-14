@@ -1,0 +1,133 @@
+
+
+I'll start by reading the specification and exploring the project structure to understand the context.Good — this is a greenfield project with no existing code yet. Let me also check if there are any existing plans or related specs for additional context.Now I have full context. Let me provide my review.
+
+---
+
+## Specification Review: 0001-todo-manager.md
+
+### Overall Impression
+
+This is a well-structured, thorough specification for a greenfield todo manager. The problem statement is clear, the approach selection is well-reasoned, and most key decisions are already made. I have a few substantive concerns and several minor suggestions.
+
+---
+
+### 1. Completeness
+
+**Strengths:**
+- Success criteria are well-defined and checkable
+- Two solution approaches compared with a clear rationale for selection
+- Risk table is practical and realistic
+- Test scenarios cover both functional and non-functional requirements
+
+**Issues:**
+
+**1a. NL Interface: Missing failure/degradation mode (Medium)**
+The spec says Gemini API is required for the NL interface, but doesn't specify what happens when:
+- The Gemini API is unreachable (network failure, outage)
+- The API key is missing/invalid at runtime
+- Rate limits are hit
+
+The risk table mentions "basic rate limiting / error messaging" but the success criteria and desired state don't address graceful degradation. **Suggestion:** Add a success criterion like "NL interface shows clear error state when Gemini API is unavailable; CRUD UI remains fully functional."
+
+**1b. Todo data model: missing `id` field in formal definition (Minor)**
+The spec mentions "Todo IDs should be generated client-side (UUID or timestamp-based)" in the Notes section, but the formal data model in "Desired State" lists `title, description, priority, due date, status, created/updated timestamps` — no `id`. The notes section is easy to overlook. **Suggestion:** Add `id` to the formal field list.
+
+**1c. Sorting / ordering not specified (Minor)**
+There's no mention of how todos should be ordered in the list view. By creation date? Due date? Priority? This matters for UX and will affect filtering behavior. **Suggestion:** Specify a default sort order (e.g., "newest first") and whether sorting controls are in scope.
+
+---
+
+### 2. Technical Feasibility
+
+**Strengths:**
+- The architecture (client-side CRUD + server-side API route for Gemini) is sound and standard Next.js
+- API key security is correctly addressed via server-side proxy
+- localStorage is appropriate for this scale
+
+**Issues:**
+
+**2a. "Gemini 3.0 Flash" — verify model availability (Medium)**
+The spec references "Gemini 3.0 Flash" throughout. As of my knowledge, Google's Gemini models include Gemini 1.5 Flash and Gemini 2.0 Flash. "Gemini 3.0 Flash" may not exist as a released model, or may have a different formal name. If this model identifier is wrong, the implementation will fail at the API call stage. **Suggestion:** Verify the exact model name (e.g., `gemini-2.0-flash`) and update, or specify that the builder should use the latest available Flash model.
+
+**2b. NL context window concern (Low)**
+The spec says "NL interface sends todo data context to Gemini for processing." With localStorage potentially holding many todos, the full todo list could become large. No upper bound is specified. **Suggestion:** Consider noting a practical limit (e.g., "up to 1000 todos") or specifying that context should be trimmed if needed.
+
+---
+
+### 3. Edge Cases & Error Scenarios
+
+**Covered well:**
+- Ambiguous NL commands (clarification requested) ✓
+- Unparseable Gemini responses ✓
+- localStorage size limits ✓
+
+**Missing:**
+- **Empty state**: What should the UI show when there are no todos? This is the first thing every user sees.
+- **Duplicate todos**: Can a user create two todos with the same title? (Relevant for NL disambiguation)
+- **localStorage unavailable**: Private/incognito browsing modes may restrict localStorage. What happens?
+- **Concurrent tabs**: If a user has the app open in two tabs, localStorage changes in one won't be reflected in the other without explicit handling. Worth at least acknowledging.
+
+---
+
+### 4. Security Considerations
+
+**Well covered:**
+- API key server-side only ✓
+- Input sanitization for XSS ✓
+- Prompt injection mentioned ✓
+
+**One gap:**
+- **Prompt injection is acknowledged but not specified**: The spec says "NL interface should not be exploitable for prompt injection that bypasses intended behavior" but doesn't describe what "intended behavior" boundaries are. For example, can the NL interface delete ALL todos at once? Should there be confirmation for destructive operations? **Suggestion:** Define whether destructive NL operations (delete all, bulk delete) require confirmation.
+
+---
+
+### 5. Testing Strategy
+
+The test scenarios are good but have a gap:
+
+- **No unit test expectations**: The spec mentions "Tests pass" as a success criterion but doesn't clarify what types of tests are expected (unit, integration, e2e). The functional test list reads more like acceptance criteria than a test plan, which is appropriate for a spec — but the success criterion "Tests pass" is vague. **Suggestion:** Specify the expected test types (e.g., "unit tests for todo CRUD logic, integration tests for API route").
+
+- **NL tests are non-deterministic**: Tests 9–13 depend on Gemini producing correct outputs, which is inherently non-deterministic. **Suggestion:** Note that NL tests should mock the Gemini API to test the action parsing/execution pipeline deterministically.
+
+---
+
+### 6. Clarity & Ambiguities
+
+**Overall clarity is high.** A builder could pick this up and know what to build.
+
+**Minor ambiguities:**
+- **"Responsive UI"**: The spec says it should work on desktop and mobile but doesn't define breakpoints or layout expectations (sidebar? stacked?). This is fine for a spec — the plan can resolve it.
+- **Chat interface UX**: Is the NL chat a separate page/panel, or integrated into the main view? The spec doesn't prescribe this, which is appropriate for spec-level, but worth noting.
+- **Tailwind CSS**: Listed in Dependencies but not in Constraints. This is fine — it's clearly the intended choice.
+
+---
+
+### Summary of Findings
+
+| # | Issue | Severity | Category |
+|---|-------|----------|----------|
+| 1a | No degradation behavior when Gemini is unavailable | Medium | Completeness |
+| 1c | No default sort order specified | Minor | Completeness |
+| 2a | "Gemini 3.0 Flash" model name may not exist | Medium | Feasibility |
+| 3 | Missing edge cases (empty state, duplicate titles, private browsing) | Minor | Edge Cases |
+| 4 | Destructive NL operations need confirmation policy | Minor | Security |
+| 5 | NL test determinism / test types not specified | Minor | Testing |
+
+None of these are blockers. Issues 1a and 2a are worth addressing before the plan phase — 1a because it affects architecture (the builder needs to know how to handle API failure), and 2a because an incorrect model name will cause implementation failure. The rest can be resolved during planning.
+
+---
+
+---
+VERDICT: COMMENT
+SUMMARY: Solid, well-structured spec with two medium-priority items to address (Gemini model name verification, API failure degradation behavior) before planning
+CONFIDENCE: HIGH
+---
+
+KEY_ISSUES:
+- "Gemini 3.0 Flash" may not be a valid model identifier — verify against Google's current model catalog and specify the exact model string
+- No specification for behavior when Gemini API is unavailable — the CRUD UI should remain functional and the NL interface should show a clear error state
+- Missing `id` field in the formal todo data model definition (only mentioned in Notes)
+- No default sort order for the todo list
+- Destructive NL operations (delete all, bulk operations) lack a confirmation policy
+- NL-dependent test scenarios need guidance on mocking for deterministic testing
