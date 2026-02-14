@@ -1,24 +1,24 @@
 id: '0001'
 title: todo-manager
 protocol: spir
-phase: implement
+phase: review
 plan_phases:
   - id: phase_1
     title: Project Scaffolding & Configuration
-    status: in_progress
+    status: complete
   - id: phase_2
     title: Todo Data Layer & Types
-    status: pending
+    status: complete
   - id: phase_3
     title: Todo UI Components
-    status: pending
+    status: complete
   - id: phase_4
     title: Natural Language Chat Interface
-    status: pending
+    status: complete
   - id: phase_5
     title: Testing & Deployment Configuration
-    status: pending
-current_plan_phase: phase_1
+    status: complete
+current_plan_phase: null
 gates:
   spec-approval:
     status: approved
@@ -32,6 +32,84 @@ gates:
     status: pending
 iteration: 1
 build_complete: false
-history: []
+history:
+  - iteration: 1
+    plan_phase: phase_1
+    build_output: ''
+    reviews:
+      - model: gemini
+        verdict: REQUEST_CHANGES
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_1-iter1-gemini.txt
+      - model: codex
+        verdict: REQUEST_CHANGES
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_1-iter1-codex.txt
+      - model: claude
+        verdict: APPROVE
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_1-iter1-claude.txt
+  - iteration: 1
+    plan_phase: phase_2
+    build_output: ''
+    reviews:
+      - model: gemini
+        verdict: APPROVE
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_2-iter1-gemini.txt
+      - model: codex
+        verdict: REQUEST_CHANGES
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_2-iter1-codex.txt
+      - model: claude
+        verdict: APPROVE
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_2-iter1-claude.txt
+  - iteration: 1
+    plan_phase: phase_3
+    build_output: ''
+    reviews:
+      - model: gemini
+        verdict: APPROVE
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_3-iter1-gemini.txt
+      - model: codex
+        verdict: REQUEST_CHANGES
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_3-iter1-codex.txt
+      - model: claude
+        verdict: APPROVE
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_3-iter1-claude.txt
+  - iteration: 1
+    plan_phase: phase_4
+    build_output: ''
+    reviews:
+      - model: gemini
+        verdict: REQUEST_CHANGES
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_4-iter1-gemini.txt
+      - model: codex
+        verdict: REQUEST_CHANGES
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_4-iter1-codex.txt
+      - model: claude
+        verdict: APPROVE
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_4-iter1-claude.txt
+  - iteration: 2
+    plan_phase: phase_4
+    build_output: ''
+    reviews:
+      - model: gemini
+        verdict: REQUEST_CHANGES
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_4-iter2-gemini.txt
+      - model: codex
+        verdict: REQUEST_CHANGES
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_4-iter2-codex.txt
+      - model: claude
+        verdict: APPROVE
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_4-iter2-claude.txt
+  - iteration: 1
+    plan_phase: phase_5
+    build_output: ''
+    reviews:
+      - model: gemini
+        verdict: APPROVE
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_5-iter1-gemini.txt
+      - model: codex
+        verdict: REQUEST_CHANGES
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_5-iter1-codex.txt
+      - model: claude
+        verdict: APPROVE
+        file: /private/tmp/todo-spir-2026-r2/codev/projects/0001-todo-manager/0001-phase_5-iter1-claude.txt
 started_at: '2026-02-14T04:50:09.850Z'
-updated_at: '2026-02-14T05:07:54.033Z'
+updated_at: '2026-02-14T05:54:09.904Z'

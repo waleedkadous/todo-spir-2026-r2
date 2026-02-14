@@ -1,0 +1,16 @@
+1. `src/app/api/chat/route.ts:25` payload-size enforcement is not byte-accurate.  
+`bodyText.length` counts UTF-16 code units, not bytes, so requests with multi-byte characters can exceed 100KB in actual payload bytes while bypassing this check. This directly misses the phase requirement to enforce max 100KB payload robustly.
+
+2. `src/hooks/useChat.ts:36` computes `today` in UTC (`toISOString().split("T")[0]`), not browser-local date semantics.  
+Phase 4/spec explicitly require local date interpretation for terms like “today/tomorrow/this week.” Around local midnight, this can send the wrong date to Gemini and produce incorrect date-based actions.
+
+3. `src/app/api/chat/route.ts:105` + `src/hooks/useChat.ts:62` do not provide a clear Gemini-unavailable message.  
+When Gemini is unavailable/misconfigured (e.g., missing `GEMINI_API_KEY`), server returns a generic `"Failed to process your request"` and chat shows that generic text. Spec/phase criteria call for a clear unavailable/error message for NL while keeping CRUD functional (CRUD remains functional, but clarity requirement is not met).
+
+---
+VERDICT: REQUEST_CHANGES
+SUMMARY: Phase 4 is largely complete and well-tested, but payload-size enforcement, local-date semantics, and Gemini-unavailable error clarity still miss required behavior.
+CONFIDENCE: HIGH
+---
+
+KEY_ISSUES: Byte-inaccurate 100KB enforcement in API route; UTC (not local) date passed to Gemini; generic (not clear Gemini-unavailable) error messaging.
