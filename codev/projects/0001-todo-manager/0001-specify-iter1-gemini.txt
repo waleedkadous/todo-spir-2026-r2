@@ -1,0 +1,12 @@
+The spec outlines a clear, modern Todo application with a unique "No-DB" constraint and an LLM-powered interface. The core requirements are well-defined, but the interaction model between the client, the LLM, and the current application state needs more detail to be robust. Specifically, handling conversational context (history) and view-dependent references (e.g., "delete the first one") requires the API to receive more than just the raw todo list.
+
+---
+VERDICT: REQUEST_CHANGES
+SUMMARY: Missing details on chat history/context management and view-dependent command resolution.
+CONFIDENCE: HIGH
+---
+KEY_ISSUES:
+- **Chat Context & History**: The spec mentions sending "user's message plus current todo state" to the API. It does not explicitly include *conversation history*. Without history, the LLM cannot handle follow-up queries (e.g., "Change its priority to high" after "Create a task called X").
+- **View-Dependent References**: Commands like "delete the first todo" are ambiguous without knowing the client's current *sort/filter state*. The API payload should include the currently visible todo IDs or the filter criteria to resolve relative references correctly.
+- **Action Schema Definition**: While "structured JSON actions" are mentioned, the specific schema (e.g., `zod` definition or JSON interface) is missing. Defining this contract (e.g., `{ type: 'UPDATE', id: string, payload: Partial<Todo> }`) is critical for the implementation phase to ensure frontend/backend alignment.
+- **Gemini Model Version**: Spec uses "Gemini 3.0 Flash". Please confirm this model ID is valid and available in the target environment/region. If "Gemini 1.5 Flash" is the intended current version, please update.
