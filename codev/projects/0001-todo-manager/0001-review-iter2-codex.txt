@@ -1,0 +1,27 @@
+1. `LIST_TODOS` without `filter` does not clear existing filters, causing incorrect behavior and misleading output.  
+File: `src/lib/actionExecutor.ts:257`  
+- Current logic returns `"Showing all X todos"` but does not call `setFilters`, so prior filters (including NL-only `dueBefore`/`dueAfter`) remain active.  
+- This can leave the UI still filtered while claiming all todos are shown.  
+- It also creates a hidden-state trap: date filters set via NL are not visible/clearable in `FilterBar`, and “show all” won’t reset them.
+
+2. Client-side execution errors are misreported as network failures.  
+File: `src/hooks/useChat.ts:82`, `src/hooks/useChat.ts:94`  
+- `executeAction(...)` (and underlying callbacks like `addTodo`/`updateTodo`) can throw validation/domain errors.  
+- Those exceptions are caught by the outer `catch` and shown as `"Failed to connect to the server..."`, which is incorrect and obscures real action/validation failures.  
+- Spec calls for clear handling of invalid action parameters; this path currently masks them.
+
+Open questions / assumptions:
+- I’m assuming `LIST_TODOS` with no filter is intended to mean “show all” (reset filters). If you intended “report counts only, preserve current filters,” then the user-facing message should be changed to avoid contradiction.
+
+Validation run:
+- `npm test -- --run`: passed (`101` tests).
+- `npm run lint`: passed.
+- `npm run build`: could not be validated in this sandbox due Turbopack port-binding restriction (`Operation not permitted`), so build status is unconfirmed here.
+
+---
+VERDICT: REQUEST_CHANGES
+SUMMARY: Core implementation is strong, but `LIST_TODOS` filter-reset semantics and chat error classification produce user-visible correctness issues.
+CONFIDENCE: HIGH
+---
+
+KEY_ISSUES: `LIST_TODOS` no-filter path not resetting active filters (`src/lib/actionExecutor.ts:257`); execution/validation errors misclassified as connectivity failures (`src/hooks/useChat.ts:82`, `src/hooks/useChat.ts:94`).

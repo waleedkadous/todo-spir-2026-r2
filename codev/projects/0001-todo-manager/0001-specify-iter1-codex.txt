@@ -1,0 +1,50 @@
+1. Clarity and completeness of requirements
+- Core scope is clear, but several requirements are not testable as written:
+- “Understands arbitrary phrasing” is too broad and non-falsifiable (`codev/specs/0001-todo-manager.md:54`).
+- NL contract is underspecified: no explicit action schema, confidence/clarification rules, or error payload format (`codev/specs/0001-todo-manager.md:125`).
+- Date semantics are missing (timezone, week start, interpretation of “today/this week/overdue”) (`codev/specs/0001-todo-manager.md:157`).
+- Data model details are incomplete: title constraints, max lengths, default priority/status, due-date format/validation, and ID collision strategy (`codev/specs/0001-todo-manager.md:35`, `codev/specs/0001-todo-manager.md:190`).
+
+2. Technical feasibility
+- Feasible overall: Next.js App Router + server API proxy + localStorage CRUD is practical (`codev/specs/0001-todo-manager.md:84`).
+- Main implementation risk is reliable NL-to-action execution without strict schema/versioning and guardrails.
+- Railway deployment is feasible, but no runtime/env acceptance criteria are defined (startup health, env validation).
+
+3. Edge cases and error scenarios
+- Missing/undercovered:
+- localStorage unavailable/quota exceeded/private browsing restrictions.
+- Gemini timeout, 429, 5xx, malformed JSON, partial action responses.
+- Ambiguous commands with multiple near-matches and no deterministic tie-break.
+- Duplicate titles and case/whitespace normalization.
+- Concurrent tab edits causing stale state overwrite.
+- Invalid dates and past-due behavior.
+- Offline mode behavior (CRUD works, NL fails gracefully).
+
+4. Security considerations
+- Good baseline on server-side API key handling (`codev/specs/0001-todo-manager.md:138`), but missing specifics:
+- No explicit output encoding/rendering requirements for user content (XSS prevention should name strategy).
+- No API abuse controls defined (rate limiting thresholds, payload size limits, request validation).
+- Prompt-injection mitigation is stated but not operationalized (allowlisted actions, strict schema validation, reject free-form tool output).
+- No logging/privacy guidance for todo content sent to LLM.
+
+5. Testing strategy
+- Solid starter scenarios, but not sufficient for acceptance:
+- Lacks negative-path tests (API failure modes, parsing failures, storage failures).
+- Lacks contract tests for NL action schema and deterministic parser/validator behavior.
+- No timezone/date-boundary tests.
+- No performance test method for <2s/<3s targets (`codev/specs/0001-todo-manager.md:132`).
+- Accessibility target (>80) is weak for production; recommend concrete checks (keyboard flow, form labels, screen-reader landmarks).
+
+6. Ambiguities or missing details
+- Version ambiguity: “Next.js 14+ / React 18+” may drift; pin minimum tested versions (`codev/specs/0001-todo-manager.md:67`, `codev/specs/0001-todo-manager.md:169`).
+- “All requirements are clear” conflicts with unresolved behavior in NL and date handling (`codev/specs/0001-todo-manager.md:122`).
+- No explicit non-goals for multi-device sync/auth/export/import despite local-only storage.
+- No migration/versioning plan for persisted localStorage schema.
+
+---
+VERDICT: REQUEST_CHANGES
+SUMMARY: The spec is directionally strong and feasible, but needs a stricter NL contract, explicit date/data rules, and failure/security test coverage before implementation.
+CONFIDENCE: HIGH
+---
+
+KEY_ISSUES: 1) NL action schema/validation and ambiguity-resolution rules are missing; 2) Date/time semantics are undefined; 3) Error handling for storage/API failures is not specified; 4) Security controls are stated at a high level but lack enforceable requirements; 5) Test plan lacks negative-path and contract coverage.

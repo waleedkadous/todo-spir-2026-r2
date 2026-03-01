@@ -1,0 +1,17 @@
+1. **High: Phase-3 responsive layout deliverable is not implemented**  
+`codev/plans/0001-todo-manager.md` for `phase_3` explicitly requires a “responsive layout (desktop sidebar + mobile stack)”. The current page is a single-column container (`src/app/page.tsx:15`) with no desktop sidebar structure, so this phase is incomplete against plan scope.
+
+2. **Medium: No phase-3 UI test coverage**  
+Current tests only cover storage/setup (`src/__tests__/storage.test.ts`, `src/__tests__/setup.test.ts`). There are no tests for phase-3 behaviors (create/edit/delete/toggle/filter/empty-state rendering), so regressions in UI interactions won’t be caught automatically.
+
+Open questions/assumptions:
+1. I scoped findings strictly to `phase_3` deliverables and did not assess NL chat/API work from later phases.
+2. I treated the desktop sidebar requirement as mandatory because it is listed directly in phase-3 deliverables, not just future phase context.
+
+---
+VERDICT: REQUEST_CHANGES
+SUMMARY: Core CRUD/filter UI exists, but `phase_3` is not complete due to missing desktop-sidebar responsive layout and lacks UI-level test coverage.
+CONFIDENCE: HIGH
+---
+
+KEY_ISSUES: Missing required `phase_3` “desktop sidebar + mobile stack” layout (`src/app/page.tsx:15`); no tests covering `phase_3` UI interactions/components.

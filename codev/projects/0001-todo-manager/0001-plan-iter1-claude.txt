@@ -1,0 +1,119 @@
+
+
+I'll start by reading both the plan and spec files, and exploring the project structure to understand the codebase context.Now let me explore the actual project structure to verify claims about existing files and the framework setup.Good — this is a greenfield project. The `codev/` directory is the project management framework, and there's no application code yet. Let me also quickly check the CLAUDE.md and AGENTS.md for any relevant constraints, and look at the lifecycle/protocol docs for plan format requirements.Now I have a thorough understanding of both documents and the project context. Let me compile my review.
+
+---
+
+## Plan Review: 0001-todo-manager.md
+
+### 1. Spec Coverage
+
+I compared every success criterion in the spec against the plan phases:
+
+| Spec Success Criterion | Plan Coverage |
+|---|---|
+| Create todos with title, description, priority, due date | ✅ Phase 2 (data layer) + Phase 3 (UI) |
+| View all todos sorted newest first | ✅ Phase 2 (sort logic) + Phase 3 (list component) |
+| Update any todo field | ✅ Phase 2 + Phase 3 |
+| Delete todos | ✅ Phase 2 + Phase 3 |
+| Mark as completed/pending | ✅ Phase 3 (toggle status) |
+| Filter by status | ✅ Phase 2 (filter logic) + Phase 3 (FilterBar) |
+| Filter by priority | ✅ Phase 2 + Phase 3 |
+| NL CRUD operations | ✅ Phase 4 |
+| NL ambiguity handling (CLARIFY) | ✅ Phase 4 |
+| NL date-aware queries | ✅ Phase 4 (system prompt) |
+| NL error + CRUD still works | ✅ Phase 4 |
+| localStorage persistence | ✅ Phase 2 |
+| Deploys on Railway | ✅ Phase 1 + Phase 5 |
+| Compiles without errors | ✅ Phase 5 |
+| Unit tests for CRUD + NL parsing | ⚠️ Partial — Phase 2 has CRUD unit tests, but NL action **parsing** unit tests are not explicitly planned |
+| Integration tests for API route | ✅ Phase 5 |
+| Responsive UI | ✅ Phase 3 |
+| Empty state | ✅ Phase 3 |
+
+**Gap found**: The spec explicitly calls for "Unit tests pass for todo CRUD logic **and NL action parsing**" (line 70). The plan has unit tests for CRUD in Phase 2 and integration tests for the API route in Phase 5, but there's no explicit mention of **unit testing the `actionExecutor.ts`** — the client-side function that parses/maps NL action responses to CRUD operations. This is a distinct testable unit that should have its own unit tests (separate from mocked-Gemini integration tests). Phase 5's `src/__tests__/api-chat.test.ts` tests the server route, not the client-side action executor.
+
+### 2. Phase Breakdown & Ordering
+
+**Phase sizing**: Good. Five phases of roughly equal complexity. None are oversized.
+
+**Sequencing**: Logical. The dependency chain `1 → 2 → 3 → 4 → 5` makes sense. The shortcut dependency line showing Phase 2 → Phase 4 is correct (Phase 4 needs the data layer directly, not just via the UI).
+
+**Independent commits**: Each phase can be committed independently. Phase 1 produces a working scaffold, Phase 2 adds a working data layer with tests, Phase 3 adds a working UI, Phase 4 adds NL, Phase 5 polishes.
+
+**Minor concern**: Phase 5 title is "Testing & Deployment Configuration" but the plan's own notes (line 288-289) correctly clarify that tests are written alongside code, not deferred. However, the **jest/vitest config** file is listed only in Phase 5 (line 232). If Phase 2 writes unit tests, it needs the test runner config to exist first. This is a sequencing error — test configuration should be in Phase 1 or Phase 2.
+
+### 3. Technical Approach
+
+**Architecture**: Sound. Client-side CRUD with server-side API route for Gemini is the right call — keeps the API key secure and follows standard Next.js patterns.
+
+**File structure**: Clean and conventional. `src/types/`, `src/lib/`, `src/hooks/`, `src/components/`, `src/app/api/` all follow Next.js App Router conventions.
+
+**`@google/generative-ai` SDK**: Correct choice for Gemini integration. The spec mentions it explicitly.
+
+**One notable omission**: The spec mentions several security/validation requirements:
+- **Input sanitization for XSS** — not mentioned in any phase
+- **API route validates request payload size (max 100KB)** — not mentioned in Phase 4's implementation details
+- **Rate limit handling (429)** — spec error handling section mentions showing "please wait" message; not in the plan
+
+These are small items but should at least be noted in Phase 4's deliverables or acceptance criteria.
+
+### 4. Testability
+
+**Phase 2**: Good test plan — CRUD operations, filtering, sorting, edge cases. Specific and actionable.
+
+**Phase 3**: "Manual Testing" only for UI components. This is acceptable for v1 but worth noting — no component tests planned.
+
+**Phase 4**: Integration tests with mocked Gemini are the right approach. The test scenarios from the spec (lines 207-217) map well to what's described.
+
+**Phase 5**: Consolidation phase. Makes sense as a checkpoint.
+
+**Missing**: As noted above, unit tests for the `actionExecutor.ts` module are not explicitly planned anywhere.
+
+### 5. Risk Assessment
+
+The risk table is reasonable. Three risks identified with appropriate probability/impact ratings.
+
+**Additional risks not identified**:
+1. **Gemini model availability/naming**: The spec says `gemini-2.0-flash` "or latest available Flash model." If the model ID changes or is deprecated, there's no configuration mechanism mentioned — it appears to be hardcoded. Low risk but worth noting.
+2. **Next.js version-specific API route behavior**: The plan mentions "Next.js 14+" but doesn't pin a version. Next.js 14 and 15 have different defaults for route handler caching, etc. The builder should be aware of this.
+
+### 6. Additional Observations
+
+**Positive aspects**:
+- The plan has clear acceptance criteria per phase — a builder can follow this
+- Rollback strategies per phase are practical
+- The dependency map is explicit and accurate
+- The executive summary correctly identifies the architectural approach
+- Machine-readable phase JSON is a nice touch for tooling
+
+**Minor items**:
+- The spec mentions `crypto.randomUUID()` for ID generation (line 252) — this is noted in the spec but not carried into the plan's implementation details for Phase 2. A builder might miss it.
+- The spec says "Dates use the browser's local timezone; 'this week' means Monday–Sunday of the current week" — this should be referenced in Phase 4's Gemini system prompt design notes.
+
+---
+
+## Summary
+
+This is a well-structured plan that covers the vast majority of the spec. The architecture is sound, the phase breakdown is logical, and each phase has clear deliverables and acceptance criteria. A builder could follow this successfully.
+
+There are three issues worth addressing:
+
+1. **Test config sequencing** (Medium): Jest/Vitest config is listed in Phase 5, but Phase 2 requires it for unit tests. Move it to Phase 1 or early Phase 2.
+2. **Missing `actionExecutor` unit tests** (Minor): Spec requires "unit tests for NL action parsing" — the plan only has integration tests for the API route, not unit tests for the action executor module.
+3. **Missing security/validation details in Phase 4** (Minor): Request payload size validation, rate limit handling, and XSS considerations from the spec are not reflected in the plan.
+
+None of these are blocking issues — they're gaps a competent builder would likely fill in, but since the plan is meant to be a precise guide, they're worth fixing.
+
+---
+VERDICT: COMMENT
+SUMMARY: Solid plan with minor gaps in test config sequencing, NL action parser unit testing, and security detail coverage from spec
+CONFIDENCE: HIGH
+---
+
+KEY_ISSUES:
+- Jest/Vitest configuration is listed in Phase 5 but is needed by Phase 2 for unit tests — move test runner setup to Phase 1 or Phase 2
+- Spec requires "unit tests for NL action parsing" but the plan only covers integration tests for the API route; add explicit unit tests for `actionExecutor.ts`
+- Security requirements from spec (payload size validation, rate limit 429 handling, XSS notes) are not reflected in Phase 4 deliverables or acceptance criteria
+- Minor: `crypto.randomUUID()` for ID generation (from spec notes) not mentioned in Phase 2 implementation details
+- Minor: Date/timezone semantics ("this week" = Mon-Sun, browser local timezone) should be noted in Phase 4's system prompt design

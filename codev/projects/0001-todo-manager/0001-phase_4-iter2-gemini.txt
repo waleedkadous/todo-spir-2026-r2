@@ -1,0 +1,9 @@
+The implementation of Phase 4 is largely complete and high quality, but there is a specific functional issue in the `LIST_TODOS` feedback logic that affects the user experience.
+
+---
+VERDICT: REQUEST_CHANGES
+SUMMARY: The `LIST_TODOS` action reports the total todo count instead of the filtered count, providing misleading feedback to the user.
+CONFIDENCE: HIGH
+---
+KEY_ISSUES:
+- In `src/lib/actionExecutor.ts`, the `LIST_TODOS` handler calculates the item count using `callbacks.todos.length` (which contains all todos) rather than applying the new filters. This results in chat messages like "Showing filtered todos (10 total)" even if the filter only shows 1 item in the UI. The executor should import `filterTodos` from `@/lib/storage` to calculate and report the correct number of matching todos in the response message.

@@ -1,0 +1,27 @@
+1. `HIGH` `src/lib/storage.ts:12`, `src/lib/storage.ts:71`, `src/lib/storage.ts:82`, `src/lib/storage.ts:106`  
+`getTodos()` trusts parsed JSON shape (`JSON.parse(data) as Todo[]`). If storage contains valid JSON that is not an array (for example `{}` from manual edit/corruption), `addTodo/updateTodo/deleteTodo` call array methods (`push/findIndex`) and can throw at runtime, breaking core CRUD.  
+Missing tests: no case for “valid JSON but non-array” in `src/__tests__/storage.test.ts`.
+
+2. `MEDIUM` `src/lib/actionExecutor.ts:96`, `src/lib/actionExecutor.ts:126`, `src/lib/actionExecutor.ts:218`  
+`UPDATE_TODO` accepts an empty `updates` object. That leads to a no-op update that still returns “Updated todo” and mutates `updatedAt`, which is misleading behavior for NL commands and not aligned with expected semantic validation.  
+Missing tests: no assertion that empty updates should be rejected in `src/__tests__/actionExecutor.test.ts`.
+
+3. `MEDIUM` `src/lib/actionExecutor.ts:80`, `src/lib/actionExecutor.ts:161`, `src/lib/actionExecutor.ts:165`  
+Date fields (`dueDate`, `dueBefore`, `dueAfter`) are only type-checked as string, not format-validated (`YYYY-MM-DD`). Invalid dates can pass through, causing inconsistent filtering and display behavior later (`new Date(...)` rendering in `src/components/TodoItem.tsx:116`).  
+Missing tests for invalid date strings in parser/filter paths.
+
+Open questions/assumptions:
+1. I treated `codev/projects/0001-todo-manager/*` as review artifacts (non-runtime text), not production logic.
+2. `npm run build` could not be validated in this sandbox due Turbopack port-binding restriction; tests and lint do pass (`99/99`, lint clean).
+
+Change-summary:
+- Spec/plan alignment is generally strong: CRUD, filters, chat API, action executor, and test suite are present.
+- Security posture is reasonable (server-side API key, payload size checks, structured response parsing), but runtime robustness around corrupted localStorage and semantic validation still needs tightening.
+
+---
+VERDICT: REQUEST_CHANGES
+SUMMARY: Strong implementation and test breadth, but there are still correctness gaps in storage shape validation and NL action semantic validation.
+CONFIDENCE: HIGH
+---
+
+KEY_ISSUES: Corrupted localStorage JSON shape can crash CRUD; UPDATE_TODO accepts empty updates and reports false success; date strings are not format-validated across NL actions.

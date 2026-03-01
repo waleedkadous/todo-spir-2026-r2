@@ -1,0 +1,29 @@
+1. **High**: Missing `GEMINI_API_KEY` can crash module load instead of returning a friendly runtime error.
+- `src/lib/gemini.ts:4`-`src/lib/gemini.ts:8` throws during import when env var is absent.
+- In phase 4, requirement is graceful NL failure while CRUD remains functional (`codev/specs/0001-todo-manager.md:66`, `codev/plans/0001-todo-manager.md:186`, `codev/plans/0001-todo-manager.md:221`).
+- Current behavior risks hard failure of the chat route at load time rather than controlled API error handling in `POST`.
+
+2. **Medium**: Payload-size validation is only header-based and can be bypassed when `Content-Length` is missing/incorrect.
+- `src/app/api/chat/route.ts:7`-`src/app/api/chat/route.ts:13` checks only `content-length`.
+- Phase 4 calls for payload size validation enforced (`codev/plans/0001-todo-manager.md:181`, `codev/plans/0001-todo-manager.md:224`).
+- No secondary check on actual parsed/request body size.
+
+3. **Medium**: Date-filter fields from `LIST_TODOS` are parsed but not executed.
+- `src/lib/actionExecutor.ts:241`-`src/lib/actionExecutor.ts:247` only applies `status`/`priority`; parsed `dueBefore`/`dueAfter` are ignored.
+- This conflicts with phase-4 NL action wiring and date semantics expectations (`codev/plans/0001-todo-manager.md:182`, `codev/plans/0001-todo-manager.md:193`, plus spec date-aware NL criterion at `codev/specs/0001-todo-manager.md:65`).
+
+Open questions/assumptions:
+- I assumed date-aware list behavior is expected in phase 4 because the phase defines date semantics and date-capable `LIST_TODOS` schema.
+- I did not request later-phase deployment changes.
+
+Validation performed:
+- Ran: `npm test -- src/__tests__/actionExecutor.test.ts src/__tests__/api-chat.test.ts` (52/52 passing).
+- `npm run build` could not be validated in this sandbox due Turbopack process/port restriction, so build health was not confirmable here.
+
+---
+VERDICT: REQUEST_CHANGES
+SUMMARY: Core phase-4 pieces exist and tests pass, but there are functional gaps in graceful Gemini-unavailable handling, robust 100KB enforcement, and execution of date-based LIST filters.
+CONFIDENCE: HIGH
+---
+
+KEY_ISSUES: Missing-key crash path in `src/lib/gemini.ts`; header-only payload limit enforcement in `src/app/api/chat/route.ts`; unimplemented `dueBefore/dueAfter` execution in `src/lib/actionExecutor.ts`.
